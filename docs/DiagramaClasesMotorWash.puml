@@ -1,0 +1,130 @@
+@startuml
+title MotorWash - Diagrama de Clases (Consolidado)
+
+hide empty members
+skinparam classAttributeIconSize 0
+
+package "Dominio (Entities)" {
+  class Usuario <<Entity>> {
+    +id: String
+    +nombre: String
+    +email: String
+    +telefono: String
+    +rol: String
+    +fechaRegistro: String
+  }
+
+  class Vehiculo <<Entity>> {
+    +id: String
+    +tipo: String
+    +marca: String
+    +color: String
+    +placa: String
+    +userId: String
+  }
+
+  class Servicio <<Entity>> {
+    +id: String
+    +nombre: String
+    +descripcion: String
+    +precio: Number
+    +tipoVehiculo: String
+  }
+
+  class Visita <<Entity>> {
+    +id: String
+    +vehiculo: String
+    +tipoLavado: String
+    +fecha: String
+    +precio: Number
+    +estado: String
+    +encargado: String
+    +calificacion: Number
+    +comentario: String
+    +userId: String
+  }
+}
+
+package "Aplicación (Use Cases)" {
+  class RegisterVehicleUseCase <<UseCase>> {
+    +registerVehicleUseCase(vehiculoData, userId)
+  }
+
+  class AddVisitUseCase <<UseCase>> {
+    +addVisitUseCase(nuevaVisita, userId)
+  }
+
+  class UpdateVisitStatusUseCase <<UseCase>> {
+    +iniciarVisitaUseCase(visitaId, estadoActual, nombreEncargado)
+    +completarVisitaUseCase(visitaId, estadoActual)
+    +calificarVisitaUseCase(visitaId, estrellas, comentario)
+  }
+}
+
+package "Infraestructura (Repositorios)" {
+  class AuthRepository <<Repository>> {
+    +registerUserInDB(email, password, nombre, telefono)
+    +loginUser(email, password)
+    +updateProfileInDB(uid, datosNuevos)
+    +changeUserPassword(newPassword)
+    +logoutUser()
+    +listenToAuthChanges(onUserChange)
+  }
+
+  class UsersRepository <<Repository>> {
+    +listenToUsers(onDataUpdate)
+    +updateUserRoleInDB(usuarioId, nuevoRol)
+  }
+
+  class VehiclesRepository <<Repository>> {
+    +listenToUserVehicles(userId, onDataUpdate)
+    +createVehicleInDB(vehiculoData, userId)
+    +updateVehicleInDB(vehiculoId, nuevosDatos)
+    +deleteVehicleFromDB(vehiculoId)
+  }
+
+  class ServicesRepository <<Repository>> {
+    +listenToServices(onDataUpdate)
+    +createServiceInDB(nuevoServicio)
+    +updateServiceInDB(servicioId, nuevosDatos)
+  }
+
+  class VisitsRepository <<Repository>> {
+    +listenToUserVisits(user, onDataUpdate)
+    +crearVisitaInDB(visitaData, userId)
+    +iniciarVisitaInDB(visitaId, nombreEmpleado)
+    +completarVisitaInDB(visitaId)
+    +calificarVisitaInDB(visitaId, calificacion, comentario)
+  }
+}
+
+package "Infraestructura Nativa (Bridge)" {
+  class NativeBridge <<Adapter>> {
+    +validarNuevaVisita(visitaData)
+    +validarTransicionEstado(estadoActual, estadoNuevo)
+    +validarDatosVehiculo(tipo, marca, color, placa)
+  }
+}
+
+' Relaciones de dominio
+Usuario "1" -- "0..*" Vehiculo : posee
+Usuario "1" -- "0..*" Visita : agenda
+Vehiculo "1" -- "0..*" Visita : se usa en
+Servicio "1" -- "0..*" Visita : define tipo/precio
+
+' Relaciones de aplicación
+RegisterVehicleUseCase ..> NativeBridge : valida
+RegisterVehicleUseCase ..> VehiclesRepository : persiste
+AddVisitUseCase ..> NativeBridge : valida
+AddVisitUseCase ..> VisitsRepository : persiste
+UpdateVisitStatusUseCase ..> NativeBridge : valida transición
+UpdateVisitStatusUseCase ..> VisitsRepository : actualiza estado
+
+' Relación repositorios con entidades persistidas
+AuthRepository ..> Usuario
+UsersRepository ..> Usuario
+VehiclesRepository ..> Vehiculo
+ServicesRepository ..> Servicio
+VisitsRepository ..> Visita
+
+@enduml
