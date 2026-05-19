@@ -1,10 +1,12 @@
 @startuml
-title MotorWash - Diagrama de Clases (Consolidado)
+title MotorWash - Diagrama de Clases UML (Consolidado)
 
+left to right direction
 hide empty members
 skinparam classAttributeIconSize 0
+skinparam linetype ortho
 
-package "Dominio (Entities)" {
+package "Dominio" {
   class Usuario <<Entity>> {
     +id: String
     +nombre: String
@@ -25,106 +27,146 @@ package "Dominio (Entities)" {
 
   class Servicio <<Entity>> {
     +id: String
-    +nombre: String
+    +titulo: String
     +descripcion: String
     +precio: Number
+    +tiempoEstimado: Number
     +tipoVehiculo: String
   }
 
   class Visita <<Entity>> {
     +id: String
-    +vehiculo: String
-    +tipoLavado: String
     +fecha: String
+    +tipoLavado: String
+    +tiempoEstimado: Number
     +precio: Number
-    +estado: String
     +encargado: String
+    +vehiculo: String
+    +estado: String
+    +fechaCreado: String
+    +horaInicio: Number
     +calificacion: Number
     +comentario: String
     +userId: String
   }
+
+  class StateRules <<Utility>> {
+    {static} +TRANSICIONES_PERMITIDAS: Map
+    {static} +ETIQUETAS_ESTADO: Map
+    {static} +validarTransicionEstado(estadoActual, estadoNuevo)
+    {static} +validarNuevaVisita(visitaData)
+  }
+
+  class PlateRules <<Utility>> {
+    {static} +PATRON_PARTICULAR: RegExp
+    {static} +PATRON_MOTO: RegExp
+    {static} +normalizarPlaca(placa)
+    {static} +validarPlaca(placa)
+    {static} +validarDatosVehiculo(tipo, marca, color, placa)
+  }
+
+  class PricingRules <<Utility>> {
+    {static} +TIPOS_VEHICULO: Map
+    {static} +servicioAplicaParaVehiculo(tipoServicio, tipoVehiculoCliente)
+    {static} +calcularPrecioFinal(precioBase)
+  }
 }
 
 package "Aplicación (Use Cases)" {
-  class RegisterVehicleUseCase <<UseCase>> {
-    +registerVehicleUseCase(vehiculoData, userId)
+  class RegisterVehicleUseCase <<ApplicationService>> {
+    {static} +registerVehicleUseCase(vehiculoData, userId)
   }
 
-  class AddVisitUseCase <<UseCase>> {
-    +addVisitUseCase(nuevaVisita, userId)
+  class AddVisitUseCase <<ApplicationService>> {
+    {static} +addVisitUseCase(nuevaVisita, userId)
   }
 
-  class UpdateVisitStatusUseCase <<UseCase>> {
-    +iniciarVisitaUseCase(visitaId, estadoActual, nombreEncargado)
-    +completarVisitaUseCase(visitaId, estadoActual)
-    +calificarVisitaUseCase(visitaId, estrellas, comentario)
+  class UpdateVisitStatusUseCase <<ApplicationService>> {
+    {static} +iniciarVisitaUseCase(visitaId, estadoActual, nombreEncargado)
+    {static} +completarVisitaUseCase(visitaId, estadoActual)
+    {static} +calificarVisitaUseCase(visitaId, estrellas, comentario)
   }
 }
 
-package "Infraestructura (Repositorios)" {
+package "Infraestructura (Repositorios Firebase)" {
   class AuthRepository <<Repository>> {
-    +registerUserInDB(email, password, nombre, telefono)
-    +loginUser(email, password)
-    +updateProfileInDB(uid, datosNuevos)
-    +changeUserPassword(newPassword)
-    +logoutUser()
-    +listenToAuthChanges(onUserChange)
+    {static} +registerUserInDB(email, password, nombre, telefono)
+    {static} +loginUser(email, password)
+    {static} +updateProfileInDB(uid, datosNuevos)
+    {static} +changeUserPassword(newPassword)
+    {static} +logoutUser()
+    {static} +listenToAuthChanges(onUserChange)
   }
 
   class UsersRepository <<Repository>> {
-    +listenToUsers(onDataUpdate)
-    +updateUserRoleInDB(usuarioId, nuevoRol)
+    {static} +listenToUsers(onDataUpdate)
+    {static} +updateUserRoleInDB(usuarioId, nuevoRol)
   }
 
   class VehiclesRepository <<Repository>> {
-    +listenToUserVehicles(userId, onDataUpdate)
-    +createVehicleInDB(vehiculoData, userId)
-    +updateVehicleInDB(vehiculoId, nuevosDatos)
-    +deleteVehicleFromDB(vehiculoId)
+    {static} +listenToUserVehicles(userId, onDataUpdate)
+    {static} +createVehicleInDB(vehiculoData, userId)
+    {static} +updateVehicleInDB(vehiculoId, nuevosDatos)
+    {static} +deleteVehicleFromDB(vehiculoId)
   }
 
   class ServicesRepository <<Repository>> {
-    +listenToServices(onDataUpdate)
-    +createServiceInDB(nuevoServicio)
-    +updateServiceInDB(servicioId, nuevosDatos)
+    {static} +listenToServices(onDataUpdate)
+    {static} +createServiceInDB(nuevoServicio)
+    {static} +updateServiceInDB(servicioId, nuevosDatos)
   }
 
   class VisitsRepository <<Repository>> {
-    +listenToUserVisits(user, onDataUpdate)
-    +crearVisitaInDB(visitaData, userId)
-    +iniciarVisitaInDB(visitaId, nombreEmpleado)
-    +completarVisitaInDB(visitaId)
-    +calificarVisitaInDB(visitaId, calificacion, comentario)
+    {static} +listenToUserVisits(user, onDataUpdate)
+    {static} +crearVisitaInDB(visitaData, userId)
+    {static} +iniciarVisitaInDB(visitaId, nombreEmpleado)
+    {static} +completarVisitaInDB(visitaId)
+    {static} +calificarVisitaInDB(visitaId, calificacion, comentario)
   }
 }
 
-package "Infraestructura Nativa (Bridge)" {
+package "Infraestructura Nativa" {
   class NativeBridge <<Adapter>> {
-    +validarNuevaVisita(visitaData)
-    +validarTransicionEstado(estadoActual, estadoNuevo)
-    +validarDatosVehiculo(tipo, marca, color, placa)
+    {static} +isKotlinAvailable: boolean
+    {static} +calcularPrecioFinal(precioBase, tipoVehiculo)
+    {static} +validarNuevaVisita(visitaData)
+    {static} +validarTransicionEstado(estadoActual, estadoNuevo)
+    {static} +validarPlaca(placa)
+    {static} +validarDatosVehiculo(tipo, marca, color, placa)
+    {static} +clasificarVehiculo(tipoVehiculo)
   }
 }
 
-' Relaciones de dominio
+' Relaciones del dominio
 Usuario "1" -- "0..*" Vehiculo : posee
-Usuario "1" -- "0..*" Visita : agenda
-Vehiculo "1" -- "0..*" Visita : se usa en
-Servicio "1" -- "0..*" Visita : define tipo/precio
+Usuario "1" -- "0..*" Visita : solicita
+Visita ..> Vehiculo : snapshot textual
+Visita ..> Servicio : tipoLavado/precio
 
-' Relaciones de aplicación
+PlateRules ..> Vehiculo : valida
+StateRules ..> Visita : valida
+PricingRules ..> Servicio : aplica reglas
+
+' Orquestación de aplicación
 RegisterVehicleUseCase ..> NativeBridge : valida
 RegisterVehicleUseCase ..> VehiclesRepository : persiste
+
 AddVisitUseCase ..> NativeBridge : valida
 AddVisitUseCase ..> VisitsRepository : persiste
+
 UpdateVisitStatusUseCase ..> NativeBridge : valida transición
 UpdateVisitStatusUseCase ..> VisitsRepository : actualiza estado
 
-' Relación repositorios con entidades persistidas
+' Repositorios y entidades persistidas
 AuthRepository ..> Usuario
 UsersRepository ..> Usuario
 VehiclesRepository ..> Vehiculo
 ServicesRepository ..> Servicio
 VisitsRepository ..> Visita
+
+note bottom
+En el código JavaScript, los "use cases", repositorios y bridge se implementan
+como módulos con funciones exportadas; en UML se modelan como operaciones estáticas.
+end note
 
 @enduml
